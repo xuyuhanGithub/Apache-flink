@@ -235,7 +235,7 @@ public class CliFrontend {
 				logAndSysout("Job has been submitted with JobID " + jobGraph.getJobID());
 
 				try {
-					client.shutdown();
+					client.close();
 				} catch (Exception e) {
 					LOG.info("Could not properly shut down the client.", e);
 				}
@@ -259,7 +259,6 @@ public class CliFrontend {
 				}
 
 				try {
-					client.setPrintStatusDuringExecution(runOptions.getStdoutLogging());
 					client.setDetached(runOptions.getDetachedMode());
 
 					LOG.debug("{}", runOptions.getSavepointRestoreSettings());
@@ -285,7 +284,7 @@ public class CliFrontend {
 						}
 					}
 					try {
-						client.shutdown();
+						client.close();
 					} catch (Exception e) {
 						LOG.info("Could not properly shut down the client.", e);
 					}
@@ -531,14 +530,14 @@ public class CliFrontend {
 			activeCommandLine,
 			commandLine,
 			clusterClient -> {
+				final String savepointPath;
 				try {
-					clusterClient.stopWithSavepoint(jobId, advanceToEndOfEventTime, targetDirectory);
+					savepointPath = clusterClient.stopWithSavepoint(jobId, advanceToEndOfEventTime, targetDirectory);
 				} catch (Exception e) {
 					throw new FlinkException("Could not stop with a savepoint job \"" + jobId + "\".", e);
 				}
+				logAndSysout("Savepoint completed. Path: " + savepointPath);
 			});
-
-		logAndSysout((advanceToEndOfEventTime ? "Drained job " : "Suspended job ") + "\"" + jobId + "\" with a savepoint.");
 	}
 
 	/**
@@ -945,7 +944,7 @@ public class CliFrontend {
 					clusterAction.runAction(clusterClient);
 				} finally {
 					try {
-						clusterClient.shutdown();
+						clusterClient.close();
 					} catch (Exception e) {
 						LOG.info("Could not properly shut down the cluster client.", e);
 					}

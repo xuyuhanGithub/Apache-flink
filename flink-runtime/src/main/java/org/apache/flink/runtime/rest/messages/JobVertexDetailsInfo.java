@@ -26,10 +26,12 @@ import org.apache.flink.runtime.rest.messages.json.JobVertexIDDeserializer;
 import org.apache.flink.runtime.rest.messages.json.JobVertexIDSerializer;
 
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonCreator;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -75,6 +77,11 @@ public class JobVertexDetailsInfo implements ResponseBody {
 		this.subtasks = checkNotNull(subtasks);
 	}
 
+	@JsonIgnore
+	public List<VertexTaskDetail> getSubtasks() {
+		return Collections.unmodifiableList(subtasks);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -115,6 +122,7 @@ public class JobVertexDetailsInfo implements ResponseBody {
 		public static final String FIELD_NAME_END_TIME = "end-time";
 		public static final String FIELD_NAME_DURATION = "duration";
 		public static final String FIELD_NAME_METRICS = "metrics";
+		public static final String FIELD_NAME_TASKMANAGER_ID = "taskmanager-id";
 
 		@JsonProperty(FIELD_NAME_SUBTASK)
 		private final int subtask;
@@ -143,6 +151,9 @@ public class JobVertexDetailsInfo implements ResponseBody {
 		@JsonProperty(FIELD_NAME_METRICS)
 		private final IOMetricsInfo metrics;
 
+		@JsonProperty(FIELD_NAME_TASKMANAGER_ID)
+		private final String taskmanagerId;
+
 		@JsonCreator
 		public VertexTaskDetail(
 				@JsonProperty(FIELD_NAME_SUBTASK) int subtask,
@@ -152,7 +163,8 @@ public class JobVertexDetailsInfo implements ResponseBody {
 				@JsonProperty(FIELD_NAME_START_TIME) long startTime,
 				@JsonProperty(FIELD_NAME_END_TIME) long endTime,
 				@JsonProperty(FIELD_NAME_DURATION) long duration,
-				@JsonProperty(FIELD_NAME_METRICS) IOMetricsInfo metrics) {
+				@JsonProperty(FIELD_NAME_METRICS) IOMetricsInfo metrics,
+				@JsonProperty(FIELD_NAME_TASKMANAGER_ID) String taskmanagerId) {
 			this.subtask = subtask;
 			this.status = checkNotNull(status);
 			this.attempt = attempt;
@@ -162,6 +174,12 @@ public class JobVertexDetailsInfo implements ResponseBody {
 			this.endTime = endTime;
 			this.duration = duration;
 			this.metrics = checkNotNull(metrics);
+			this.taskmanagerId = checkNotNull(taskmanagerId);
+		}
+
+		@JsonIgnore
+		public int getAttempt() {
+			return attempt;
 		}
 
 		@Override
@@ -183,12 +201,13 @@ public class JobVertexDetailsInfo implements ResponseBody {
 				startTimeCompatible == that.startTimeCompatible &&
 				endTime == that.endTime &&
 				duration == that.duration &&
-				Objects.equals(metrics, that.metrics);
+				Objects.equals(metrics, that.metrics) &&
+				Objects.equals(taskmanagerId, that.taskmanagerId);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(subtask, status, attempt, host, startTime, startTimeCompatible, endTime, duration, metrics);
+			return Objects.hash(subtask, status, attempt, host, startTime, startTimeCompatible, endTime, duration, metrics, taskmanagerId);
 		}
 	}
 }
